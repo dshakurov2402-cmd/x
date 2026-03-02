@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByteCode - Интерактивный тренажер</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #22c55e;
+            --error: #ef4444;
+            --bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Layout --- */
+        header {
+            padding: 1rem 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-container {
+            width: 300px;
+            height: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--primary);
+            transition: 0.3s;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 300px 1fr 1fr;
+            flex-grow: 1;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        /* --- Sidebar & Cards --- */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .theory-section h2 { color: var(--primary); margin-bottom: 1rem; }
+        .theory-section p { font-size: 0.95rem; line-height: 1.5; opacity: 0.8; }
+
+        /* --- Editor Area --- */
+        .editor-container { position: relative; }
+        .label { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.5rem; display: block; }
+        
+        textarea {
+            width: 100%;
+            height: 100%;
+            background: #00000044;
+            color: #d1d5db;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Consolas', monospace;
+            resize: none;
+            outline: none;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 8px;
+            border: none;
+        }
+
+        /* --- Character "Byte" --- */
+        .byte-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .byte-bubble {
+            background: white;
+            color: #1e293b;
+            padding: 1rem;
+            border-radius: 15px 15px 0 15px;
+            max-width: 250px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            font-size: 0.9rem;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .byte-character {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 20%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 0 20px var(--primary);
+            animation: float 3s ease-in-out infinite;
+            border: 3px solid rgba(255,255,255,0.2);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: 0.2s;
+        }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .success-text { color: var(--success) !important; font-weight: bold; }
+        .error-text { color: var(--error) !important; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">ByteCode <strong>JS</strong></div>
+    <div style="text-align: center;">
+        <span id="level-title" style="display: block; font-size: 0.8rem; margin-bottom: 5px;">Level 1</span>
+        <div class="progress-container"><div id="progress-bar"></div></div>
+    </div>
+    <div id="stats">HTML / CSS</div>
+</header>
+
+<main>
+    <aside class="glass-panel theory-section">
+        <h2 id="task-name">Загрузка...</h2>
+        <p id="task-desc"></p>
+        <button class="btn" onclick="checkCode()">Проверить код</button>
+    </aside>
+
+    <section class="glass-panel editor-container">
+        <span class="label">Редактор HTML</span>
+        <textarea id="code-editor" spellcheck="false" oninput="updatePreview()"></textarea>
+    </section>
+
+    <section class="glass-panel">
+        <span class="label">Результат</span>
+        <iframe id="preview"></iframe>
+    </section>
+</main>
+
+<div class="byte-container">
+    <div class="byte-bubble" id="byte-msg">Привет! Я Байт. Давай напишем твой первый код!</div>
+    <div class="byte-character">🤖</div>
+</div>
+
+<script>
+    // --- Контент уровней ---
+    const levels = [
+        {
+            id: 1,
+            name: "Заголовки (h1)",
+            desc: "Заголовки помогают структурировать контент. Напиши заголовок первого уровня <h1> с текстом 'Привет, мир!'.",
+            target: /<h1>\s*Привет,\s*мир!\s*<\/h1>/i,
+            initial: "",
+            hint: "Не забудь закрыть тег </h1>!"
+        },
+        {
+            id: 2,
+            name: "Списки (ul/li)",
+            desc: "Маркированные списки создаются тегом <ul>. Создай список с одним элементом <li>Кот</li>.",
+            target: /<ul>\s*<li>\s*Кот\s*<\/li>\s*<\/ul>/i,
+            initial: "<ul>\n\n</ul>",
+            hint: "Вставь <li> внутрь <ul>."
+        },
+        {
+            id: 3,
+            name: "Ссылки (a)",
+            desc: "Ссылки используют атрибут href. Создай ссылку на 'google.com' с текстом 'Поиск'.",
+            target: /<a\s+href=["'].*google\.com["']\s*>.*Поиск.*<\/a>/i,
+            initial: "",
+            hint: "Пример: <a href='url'>Текст</a>"
+        }
+    ];
+
+    let currentLevelIndex = 0;
+
+    // Ссылки на DOM элементы
+    const editor = document.getElementById('code-editor');
+    const preview = document.getElementById('preview');
+    const byteMsg = document.getElementById('byte-msg');
+    const progressBar = document.getElementById('progress-bar');
+
+    /**
+     * Инициализация уровня
+     */
+    function initLevel() {
+        const level = levels[currentLevelIndex];
+        document.getElementById('level-title').innerText = `Уровень ${level.id}`;
+        document.getElementById('task-name').innerText = level.name;
+        document.getElementById('task-desc').innerText = level.desc;
+        editor.value = level.initial;
+        
+        updatePreview();
+        botTalk(`Уровень ${level.id}: ${level.name}. Жду твой код!`);
+        updateProgressBar();
+    }
+
+    /**
+     * Обновление Live Preview (Iframe)
+     */
+    function updatePreview() {
+        const content = editor.value;
+        const doc = preview.contentDocument || preview.contentWindow.document;
+        doc.open();
+        // Добавляем немного стилей внутрь iframe для красоты
+        doc.write(`
+            <style>
+                body { font-family: sans-serif; padding: 20px; color: #333; }
+                h1 { color: #6366f1; }
+            </style>
+            ${content}
+        `);
+        doc.close();
+    }
+
+    /**
+     * Реплики Байта
+     */
+    function botTalk(message, type = 'normal') {
+        byteMsg.innerText = message;
+        byteMsg.className = 'byte-bubble';
+        
+        if (type === 'error') byteMsg.classList.add('error-text');
+        if (type === 'success') byteMsg.classList.add('success-text');
+    }
+
+    /**
+     * Проверка кода
+     */
+    function checkCode() {
+        const userCode = editor.value;
+        const level = levels[currentLevelIndex];
+
+        if (level.target.test(userCode)) {
+            botTalk("Отлично! Это правильный код. Переходим дальше?", "success");
+            createConfetti(); // Эффект успеха
+            
+            setTimeout(() => {
+                nextLevel();
+            }, 2000);
+        } else {
+            botTalk("Хмм... Что-то не так. " + level.hint, "error");
+        }
+    }
+
+    /**
+     * Переход на следующий уровень
+     */
+    function nextLevel() {
+        if (currentLevelIndex < levels.length - 1) {
+            currentLevelIndex++;
+            initLevel();
+        } else {
+            botTalk("Поздравляю! Ты прошел все уровни! Ты настоящий кибер-ниндзя!", "success");
+            progressBar.style.width = "100%";
+        }
+    }
+
+    /**
+     * Прогресс-бар
+     */
+    function updateProgressBar() {
+        const progress = (currentLevelIndex / levels.length) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+
+    /**
+     * Простая визуализация успеха (свечение)
+     */
+    function createConfetti() {
+        const byte = document.querySelector('.byte-character');
+        byte.style.boxShadow = "0 0 50px #22c55e";
+        setTimeout(() => {
+            byte.style.boxShadow = "0 0 20px var(--primary)";
+        }, 1500);
+    }
+
+    // Запуск приложения
+    window.onload = initLevel;
+</script>
+
+</body>
+</html>
