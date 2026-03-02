@@ -3,332 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ByteCode - Интерактивный тренажер</title>
+    <title>ByteCode Pro | Интерактивное обучение</title>
     <style>
         :root {
-            --primary: #6366f1;
-            --success: #22c55e;
-            --error: #ef4444;
-            --bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.5);
+            --bg: #05070a;
+            --panel: rgba(15, 20, 30, 0.8);
+            --text: #e2e8f0;
+            --success: #00ff88;
+            --error: #ff4d4d;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 
         body {
-            background-color: var(--bg);
-            color: white;
+            background: radial-gradient(circle at top right, #1a1b2e, var(--bg));
+            color: var(--text);
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        /* --- Layout --- */
+        /* --- Header --- */
         header {
-            padding: 1rem 2rem;
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
+            height: 70px;
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            padding: 0 30px;
+            justify-content: space-between;
+            z-index: 10;
         }
 
-        .progress-container {
-            width: 300px;
-            height: 8px;
-            background: #1e293b;
-            border-radius: 4px;
-            overflow: hidden;
+        .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: -1px; color: var(--accent); text-transform: uppercase; }
+
+        .progress-box { flex-grow: 1; max-width: 500px; margin: 0 40px; }
+        .progress-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; position: relative; }
+        #progress-fill { 
+            position: absolute; height: 100%; background: var(--accent); border-radius: 10px; 
+            width: 0%; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 15px var(--accent);
         }
 
-        #progress-bar {
-            width: 0%;
-            height: 100%;
-            background: var(--primary);
-            transition: 0.3s;
-            box-shadow: 0 0 10px var(--primary);
-        }
-
+        /* --- Main Layout --- */
         main {
             display: grid;
-            grid-template-columns: 300px 1fr 1fr;
-            flex-grow: 1;
-            gap: 1rem;
-            padding: 1rem;
+            grid-template-columns: 350px 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 70px);
         }
 
-        /* --- Sidebar & Cards --- */
-        .glass-panel {
-            background: var(--glass);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.5rem;
+        .card {
+            background: var(--panel);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .theory-section h2 { color: var(--primary); margin-bottom: 1rem; }
-        .theory-section p { font-size: 0.95rem; line-height: 1.5; opacity: 0.8; }
+        .card-header {
+            padding: 15px 20px;
+            background: rgba(255,255,255,0.03);
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
 
-        /* --- Editor Area --- */
-        .editor-container { position: relative; }
-        .label { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.5rem; display: block; }
-        
-        textarea {
-            width: 100%;
-            height: 100%;
-            background: #00000044;
+        /* --- Theory Section --- */
+        .theory-content { padding: 25px; overflow-y: auto; flex-grow: 1; }
+        .theory-content h2 { font-size: 1.8rem; margin-bottom: 15px; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .theory-content p { line-height: 1.6; color: #94a3b8; margin-bottom: 20px; }
+
+        /* --- Editor --- */
+        #code-editor {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
             color: #d1d5db;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'Consolas', monospace;
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.5;
             resize: none;
             outline: none;
+            caret-color: var(--accent);
         }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            background: white;
-            border-radius: 8px;
-            border: none;
-        }
+        /* --- Preview --- */
+        #preview { width: 100%; height: 100%; background: #fff; border: none; }
 
-        /* --- Character "Byte" --- */
-        .byte-container {
+        /* --- Byte Bot --- */
+        .byte-box {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
+            bottom: 40px;
+            right: 40px;
+            width: 320px;
             display: flex;
+            flex-direction: column;
             align-items: flex-end;
-            gap: 15px;
-            z-index: 100;
+            pointer-events: none;
         }
 
-        .byte-bubble {
-            background: white;
-            color: #1e293b;
-            padding: 1rem;
-            border-radius: 15px 15px 0 15px;
-            max-width: 250px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        .byte-speech {
+            background: #fff;
+            color: #000;
+            padding: 15px 20px;
+            border-radius: 20px 20px 0 20px;
+            margin-bottom: 15px;
             font-size: 0.9rem;
-            position: relative;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: 0.3s;
+            pointer-events: all;
+        }
+
+        .byte-speech.active { opacity: 1; transform: translateY(0); }
+
+        .byte-avatar {
+            width: 70px;
+            height: 70px;
+            background: var(--accent);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: float 4s ease-in-out infinite;
+            box-shadow: 0 0 30px var(--accent-glow);
+            pointer-events: all;
+        }
+
+        .byte-eyes { display: flex; gap: 10px; }
+        .eye { width: 10px; height: 10px; background: #000; border-radius: 50%; transition: 0.2s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* --- Button --- */
+        .check-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             transition: 0.3s;
         }
 
-        .byte-character {
-            width: 80px;
-            height: 80px;
-            background: var(--primary);
-            border-radius: 20%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            box-shadow: 0 0 20px var(--primary);
-            animation: float 3s ease-in-out infinite;
-            border: 3px solid rgba(255,255,255,0.2);
+        .check-btn:hover {
+            box-shadow: 0 0 25px var(--accent);
+            transform: scale(1.02);
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0); }
-            50% { transform: translateY(-15px) rotate(5deg); }
-        }
+        .check-btn:active { transform: scale(0.98); }
 
-        /* --- Buttons --- */
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 1rem;
-            transition: 0.2s;
-        }
-        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
-
-        .success-text { color: var(--success) !important; font-weight: bold; }
-        .error-text { color: var(--error) !important; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">ByteCode <strong>JS</strong></div>
-    <div style="text-align: center;">
-        <span id="level-title" style="display: block; font-size: 0.8rem; margin-bottom: 5px;">Level 1</span>
-        <div class="progress-container"><div id="progress-bar"></div></div>
+    <div class="logo">ByteCode<span style="color:#fff">.dev</span></div>
+    <div class="progress-box">
+        <div style="margin-bottom: 8px; font-size: 0.7rem; display: flex; justify-content: space-between;">
+            <span id="lvl-num">Level 1/3</span>
+            <span id="lvl-percent">0% Completed</span>
+        </div>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
     </div>
-    <div id="stats">HTML / CSS</div>
+    <div id="user-info" style="font-size: 0.8rem;">Ready to Compile_</div>
 </header>
 
 <main>
-    <aside class="glass-panel theory-section">
-        <h2 id="task-name">Загрузка...</h2>
-        <p id="task-desc"></p>
-        <button class="btn" onclick="checkCode()">Проверить код</button>
-    </aside>
-
-    <section class="glass-panel editor-container">
-        <span class="label">Редактор HTML</span>
-        <textarea id="code-editor" spellcheck="false" oninput="updatePreview()"></textarea>
+    <section class="card">
+        <div class="card-header">Instructions // Теория</div>
+        <div class="theory-content">
+            <h2 id="title">Загрузка системы...</h2>
+            <p id="desc">Подождите, Байт настраивает окружение.</p>
+        </div>
+        <button class="check-btn" onclick="checkAnswer()">Запустить код</button>
     </section>
 
-    <section class="glass-panel">
-        <span class="label">Результат</span>
+    <section class="card">
+        <div class="card-header">Source Code // Редактор</div>
+        <textarea id="code-editor" spellcheck="false" oninput="render()"></textarea>
+    </section>
+
+    <section class="card">
+        <div class="card-header">Live View // Результат</div>
         <iframe id="preview"></iframe>
     </section>
 </main>
 
-<div class="byte-container">
-    <div class="byte-bubble" id="byte-msg">Привет! Я Байт. Давай напишем твой первый код!</div>
-    <div class="byte-character">🤖</div>
+<div class="byte-box">
+    <div class="byte-speech" id="byte-text">Инициализация...</div>
+    <div class="byte-avatar" id="byte-bot">
+        <div class="byte-eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // --- Контент уровней ---
     const levels = [
         {
-            id: 1,
-            name: "Заголовки (h1)",
-            desc: "Заголовки помогают структурировать контент. Напиши заголовок первого уровня <h1> с текстом 'Привет, мир!'.",
-            target: /<h1>\s*Привет,\s*мир!\s*<\/h1>/i,
-            initial: "",
-            hint: "Не забудь закрыть тег </h1>!"
+            title: "Заголовки",
+            desc: "Добро пожаловать в систему! Чтобы сайт заговорил, нужен заголовок. Используй тег <b>&lt;h1&gt;</b> и напиши внутри <i>'Hello Byte'</i>.",
+            target: /<h1>\s*Hello\s*Byte\s*<\/h1>/i,
+            start: "",
+            hint: "Бро, просто напиши <h1>Hello Byte</h1>"
         },
         {
-            id: 2,
-            name: "Списки (ul/li)",
-            desc: "Маркированные списки создаются тегом <ul>. Создай список с одним элементом <li>Кот</li>.",
-            target: /<ul>\s*<li>\s*Кот\s*<\/li>\s*<\/ul>/i,
-            initial: "<ul>\n\n</ul>",
-            hint: "Вставь <li> внутрь <ul>."
+            title: "Списки покупок",
+            desc: "Отлично! Теперь создадим список. Используй <b>&lt;ul&gt;</b> для списка и <b>&lt;li&gt;</b> для элемента. Напиши в элементе <i>'Chips'</i>.",
+            target: /<ul>\s*<li>\s*Chips\s*<\/li>\s*<\/ul>/i,
+            start: "<ul>\n  \n</ul>",
+            hint: "Помни: li должен быть внутри ul!"
         },
         {
-            id: 3,
-            name: "Ссылки (a)",
-            desc: "Ссылки используют атрибут href. Создай ссылку на 'google.com' с текстом 'Поиск'.",
-            target: /<a\s+href=["'].*google\.com["']\s*>.*Поиск.*<\/a>/i,
-            initial: "",
-            hint: "Пример: <a href='url'>Текст</a>"
+            title: "Гиперссылки",
+            desc: "Последний рывок! Давай сделаем ссылку на YouTube. Используй <b>&lt;a&gt;</b> с атрибутом <b>href='https://youtube.com'</b>.",
+            target: /<a\s+href=["']https:\/\/youtube\.com["']\s*>.*<\/a>/i,
+            start: '<a href="">YouTube</a>',
+            hint: "Добавь адрес в кавычки href."
         }
     ];
 
-    let currentLevelIndex = 0;
-
-    // Ссылки на DOM элементы
+    let currentLvl = 0;
     const editor = document.getElementById('code-editor');
     const preview = document.getElementById('preview');
-    const byteMsg = document.getElementById('byte-msg');
-    const progressBar = document.getElementById('progress-bar');
+    const byteText = document.getElementById('byte-text');
 
-    /**
-     * Инициализация уровня
-     */
-    function initLevel() {
-        const level = levels[currentLevelIndex];
-        document.getElementById('level-title').innerText = `Уровень ${level.id}`;
-        document.getElementById('task-name').innerText = level.name;
-        document.getElementById('task-desc').innerText = level.desc;
-        editor.value = level.initial;
+    function speak(msg, isHappy = true) {
+        byteText.innerText = msg;
+        byteText.classList.remove('active');
+        void byteText.offsetWidth; // Триггер анимации
+        byteText.classList.add('active');
         
-        updatePreview();
-        botTalk(`Уровень ${level.id}: ${level.name}. Жду твой код!`);
-        updateProgressBar();
+        const eyes = document.querySelectorAll('.eye');
+        if (!isHappy) {
+            eyes.forEach(e => e.style.background = '#ff4d4d');
+            setTimeout(() => eyes.forEach(e => e.style.background = '#000'), 2000);
+        }
     }
 
-    /**
-     * Обновление Live Preview (Iframe)
-     */
-    function updatePreview() {
-        const content = editor.value;
-        const doc = preview.contentDocument || preview.contentWindow.document;
+    function render() {
+        const val = editor.value;
+        const doc = preview.contentDocument;
         doc.open();
-        // Добавляем немного стилей внутрь iframe для красоты
-        doc.write(`
-            <style>
-                body { font-family: sans-serif; padding: 20px; color: #333; }
-                h1 { color: #6366f1; }
-            </style>
-            ${content}
-        `);
+        doc.write(`<style>body{background:#fff;color:#222;font-family:sans-serif;padding:20px;}</style>${val}`);
         doc.close();
     }
 
-    /**
-     * Реплики Байта
-     */
-    function botTalk(message, type = 'normal') {
-        byteMsg.innerText = message;
-        byteMsg.className = 'byte-bubble';
+    function checkAnswer() {
+        const code = editor.value;
+        const goal = levels[currentLvl];
+
+        if (goal.target.test(code)) {
+            currentLvl++;
+            if (currentLvl < levels.length) {
+                speak("Бум! Это было четко. Идем дальше!", true);
+                setTimeout(loadLevel, 1500);
+            } else {
+                speak("Ты прошел все тесты! Теперь ты настоящий кодер.", true);
+                document.getElementById('progress-fill').style.width = "100%";
+            }
+        } else {
+            speak(goal.hint, false);
+        }
+    }
+
+    function loadLevel() {
+        const lvl = levels[currentLvl];
+        document.getElementById('title').innerText = lvl.title;
+        document.getElementById('desc').innerHTML = lvl.desc;
+        editor.value = lvl.start;
+        document.getElementById('lvl-num').innerText = `Level ${currentLvl + 1}/${levels.length}`;
         
-        if (type === 'error') byteMsg.classList.add('error-text');
-        if (type === 'success') byteMsg.classList.add('success-text');
+        const progress = (currentLvl / levels.length) * 100;
+        document.getElementById('progress-fill').style.width = progress + "%";
+        document.getElementById('lvl-percent').innerText = Math.round(progress) + "% Completed";
+        
+        render();
+        speak("Новое задание загружено. Погнали!");
     }
 
-    /**
-     * Проверка кода
-     */
-    function checkCode() {
-        const userCode = editor.value;
-        const level = levels[currentLevelIndex];
-
-        if (level.target.test(userCode)) {
-            botTalk("Отлично! Это правильный код. Переходим дальше?", "success");
-            createConfetti(); // Эффект успеха
-            
-            setTimeout(() => {
-                nextLevel();
-            }, 2000);
-        } else {
-            botTalk("Хмм... Что-то не так. " + level.hint, "error");
-        }
-    }
-
-    /**
-     * Переход на следующий уровень
-     */
-    function nextLevel() {
-        if (currentLevelIndex < levels.length - 1) {
-            currentLevelIndex++;
-            initLevel();
-        } else {
-            botTalk("Поздравляю! Ты прошел все уровни! Ты настоящий кибер-ниндзя!", "success");
-            progressBar.style.width = "100%";
-        }
-    }
-
-    /**
-     * Прогресс-бар
-     */
-    function updateProgressBar() {
-        const progress = (currentLevelIndex / levels.length) * 100;
-        progressBar.style.width = `${progress}%`;
-    }
-
-    /**
-     * Простая визуализация успеха (свечение)
-     */
-    function createConfetti() {
-        const byte = document.querySelector('.byte-character');
-        byte.style.boxShadow = "0 0 50px #22c55e";
-        setTimeout(() => {
-            byte.style.boxShadow = "0 0 20px var(--primary)";
-        }, 1500);
-    }
-
-    // Запуск приложения
-    window.onload = initLevel;
+    window.onload = loadLevel;
 </script>
-
 </body>
 </html>
