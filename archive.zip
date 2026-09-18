@@ -1,0 +1,9 @@
+<div class="container">
+    <h1>Скачивание файлов</h1>
+    <p>Нажмите кнопку ниже, чтобы начать загрузку.</p>
+    
+    <!-- Архив встроен прямо в ссылку. При клике браузер сразу его скачает без запросов к серверу -->
+    <a href="data:application/zip;base64,UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==" class="download-btn" download="archive.zip">Скачать .zip</a>
+    
+    <div class="file-info">Формат: ZIP</div>
+</div>
