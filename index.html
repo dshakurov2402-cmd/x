@@ -1,96 +1,65 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Скачать архив</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-color: #3b82f6;
-            --accent-hover: #2563eb;
-        }
+  * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+    .container {
+        background-color: var(--card-bg);
+        padding: 2.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+    }
 
-        .container {
-            background-color: var(--card-bg);
-            padding: 2.5rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
 
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 0.75rem;
-            font-weight: 600;
-        }
+    p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
 
-        p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
-        }
+    .download-btn {
+        display: inline-block;
+        background-color: var(--accent-color);
+        color: white;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        width: 100%;
+        cursor: pointer;
+        border: none;
+        font-size: 1rem;
+        text-align: center;
+    }
 
-        .download-btn {
-            display: inline-block;
-            background-color: var(--accent-color);
-            color: white;
-            text-decoration: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            transition: background-color 0.2s ease;
-            width: 100%;
-            cursor: pointer;
-            border: none;
-            font-size: 1rem;
-            text-align: center;
-        }
+    .download-btn:hover {
+        background-color: var(--accent-hover);
+    }
 
-        .download-btn:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .file-info {
-            margin-top: 1rem;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <h1>Скачивание файлов</h1>
-        <p>Нажмите кнопку ниже, чтобы начать загрузку.</p>
-        
-        <!-- ВСТАВЬ СЮДА СВОЮ ПРЯМУЮ ССЫЛКУ НА АРХИВ ВМЕСТО archive.zip -->
-        <a href="archive.zip" class="download-btn" download="archive.zip">Скачать .zip</a>
-        
-        <div class="file-info">Формат: ZIP</div>
-    </div>
-
-</body>
-</html>
+    .file-info {
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+</style>
