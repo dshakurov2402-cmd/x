@@ -1,181 +1,61 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberDev Academy</title>
-    <style>
-        :root {
-            --bg: #08090b;
-            --card: #111218;
-            --accent: #00ffaa;
-            --text: #e0e0e0;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
-
-        .screen {
-            position: fixed; inset: 0; display: none;
-            flex-direction: column; align-items: center; justify-content: center;
-            background: radial-gradient(circle at center, #151921 0%, #08090b 100%);
-            padding: 20px; transition: 0.5s;
-        }
-
-        .active { display: flex; }
-
-        /* --- UI Elements --- */
-        .glass-card {
-            background: var(--card);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 40px; border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            text-align: center; max-width: 600px; width: 100%;
-        }
-
-        h1 { font-size: 2.5rem; margin-bottom: 20px; letter-spacing: -1px; }
-
-        /* --- Робот --- */
-        .robot-preview {
-            width: 120px; height: 120px; border-radius: 25px;
-            margin: 20px auto; display: flex; align-items: center; justify-content: center;
-            position: relative; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 40px rgba(0,255,170,0.2);
-        }
-
-        .eye { width: 12px; height: 12px; background: #000; border-radius: 50%; margin: 0 8px; }
-
-        /* --- Кнопки и Выбор --- */
-        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; width: 100%; margin: 20px 0; }
-        
-        .choice-card {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-            padding: 20px; border-radius: 16px; cursor: pointer; transition: 0.3s;
-        }
-
-        .choice-card:hover { background: rgba(0,255,170,0.1); border-color: var(--accent); transform: translateY(-5px); }
-
-        .btn {
-            background: var(--accent); color: #000; border: none;
-            padding: 15px 40px; border-radius: 12px; font-weight: bold;
-            cursor: pointer; text-transform: uppercase; margin-top: 20px;
-        }
-
-        /* --- Игровой экран --- */
-        .game-layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; width: 100%; height: 90vh; }
-        textarea { 
-            background: #000; color: #0f0; border: 1px solid #333; 
-            padding: 20px; border-radius: 12px; font-family: monospace; font-size: 1.1rem; resize: none;
-        }
-
-        .bot-bubble {
-            position: fixed; bottom: 30px; right: 120px;
-            background: white; color: black; padding: 15px; border-radius: 15px 15px 0 15px;
-            max-width: 250px; font-weight: 500;
-        }
-    </style>
-</head>
-<body>
-
-<div class="screen active" id="screen-build">
-    <div class="glass-card">
-        <h1>Собери напарника</h1>
-        <div class="robot-preview" id="main-bot">
-            <div class="eye"></div><div class="eye"></div>
-        </div>
-        <p>Выбери цвет интерфейса помощника:</p>
-        <div class="grid">
-            <div class="choice-card" onclick="setBotColor('#00ffaa')">Neon Green</div>
-            <div class="choice-card" onclick="setBotColor('#ff0066')">Cyber Pink</div>
-            <div class="choice-card" onclick="setBotColor('#00ccff')">Sky Blue</div>
-        </div>
-        <button class="btn" onclick="goTo('screen-lang')">Далее</button>
-    </div>
-</div>
-
-<div class="screen" id="screen-lang">
-    <div class="glass-card">
-        <h1>Выбери путь кодинга</h1>
-        <div class="grid">
-            <div class="choice-card" onclick="startLang('python')">
-                <h3>Python</h3>
-                <small>Для ИИ и скриптов</small>
-            </div>
-            <div class="choice-card" onclick="startLang('cpp')">
-                <h3>C++</h3>
-                <small>Для игр и систем</small>
-            </div>
-            <div class="choice-card" onclick="startLang('js')">
-                <h3>JavaScript</h3>
-                <small>Для сайтов</small>
-            </div>
-        </div>
-        <button class="btn" style="background: none; color: white;" onclick="goTo('screen-build')">Назад</button>
-    </div>
-</div>
-
-<div class="screen" id="screen-game">
-    <div class="game-layout">
-        <div class="glass-card" style="text-align: left; padding: 20px;">
-            <h2 id="task-title">Урок</h2>
-            <p id="task-desc" style="margin: 15px 0; color: #aaa;"></p>
-            <button class="btn" style="width: 100%;" onclick="checkCode()">Проверить</button>
-            <button class="btn" style="width: 100%; background: #222; color: #fff;" onclick="goTo('screen-lang')">В меню</button>
-        </div>
-        <textarea id="code-input" spellcheck="false"></textarea>
-    </div>
-    <div class="bot-bubble" id="bot-msg">Я готов!</div>
-    <div class="robot-preview" id="game-bot" style="position: fixed; bottom: 20px; right: 20px; width: 80px; height: 80px; margin: 0;">
-        <div class="eye" style="width: 8px; height: 8px;"></div><div class="eye" style="width: 8px; height: 8px;"></div>
-    </div>
-</div>
-
-<script>
-    let selectedColor = '#00ffaa';
-    let currentLang = '';
-    
-    const db = {
-        python: { title: "Python: Print", desc: "Напиши команду <b>print('OK')</b>, чтобы вывести текст в консоль.", target: /print\(['"]OK['"]\)/ },
-        cpp: { title: "C++: Cout", desc: "Используй <b>cout << 'OK';</b> для вывода. Не забудь про точку с запятой!", target: /cout\s*<<\s*['"]OK['"]\s*;/ },
-        js: { title: "JS: Console", desc: "Напиши <b>console.log('OK')</b> для вывода в лог браузера.", target: /console\.log\(['"]OK['"]\)/ }
-    };
-
-    function setBotColor(color) {
-        selectedColor = color;
-        const bots = [document.getElementById('main-bot'), document.getElementById('game-bot')];
-        bots.forEach(b => {
-            b.style.backgroundColor = color;
-            b.style.boxShadow = `0 0 40px ${color}66`;
-        });
+* {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     }
 
-    function goTo(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
     }
 
-    function startLang(lang) {
-        currentLang = lang;
-        const data = db[lang];
-        document.getElementById('task-title').innerText = data.title;
-        document.getElementById('task-desc').innerHTML = data.desc;
-        document.getElementById('code-input').value = "";
-        document.getElementById('bot-msg').innerText = "Отличный выбор языка!";
-        goTo('screen-game');
+    .container {
+        background-color: var(--card-bg);
+        padding: 2.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
     }
 
-    function checkCode() {
-        const input = document.getElementById('code-input').value;
-        const bot = document.getElementById('bot-msg');
-        if (db[currentLang].target.test(input)) {
-            bot.innerText = "ГЕНИАЛЬНО! Код работает!";
-            bot.style.color = "green";
-        } else {
-            bot.innerText = "Хмм, где-то ошибка... Проверь скобки!";
-            bot.style.color = "red";
-        }
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
     }
-</script>
 
-</body>
-</html>
+    p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .download-btn {
+        display: inline-block;
+        background-color: var(--accent-color);
+        color: white;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        width: 100%;
+    }
+
+    .download-btn:hover {
+        background-color: var(--accent-hover);
+    }
+
+    .file-info {
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+</style>
