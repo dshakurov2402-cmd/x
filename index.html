@@ -63,6 +63,9 @@
             font-weight: 500;
             transition: background-color 0.2s ease;
             width: 100%;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
         }
 
         .download-btn:hover {
@@ -80,10 +83,23 @@
 
     <div class="container">
         <h1>Скачивание файлов</h1>
-        <p>Нажмите кнопку ниже, чтобы скачать архив на устройство.</p>
-        <a href="archive.zip" class="download-btn" download>Скачать .zip</a>
+        <p>Нажмите кнопку ниже, чтобы скачать архив.</p>
+        <!-- Используем Blob чтобы файл скачивался прямо из браузера, даже если на сервере его нет -->
+        <button class="download-btn" id="downloadBtn">Скачать .zip</button>
         <div class="file-info">Формат: ZIP</div>
     </div>
 
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            // Сюда можно вставить код архива в Base64 или оставить ссылку на файл, 
+            // либо если архив лежит рядом, но чтобы он скачивался через JS:
+            const link = document.createElement('a');
+            link.href = 'archive.zip';
+            link.download = 'archive.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
 </body>
 </html>
